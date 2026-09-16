@@ -390,101 +390,12 @@ The matrix below preserves the findings supplied in the case file. Where the for
 
 # Appendix C - Representative KQL and References
 
-## Representative KQL
 
-<table>
-<colgroup>
-<col style="width: 100%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th>// Nacos rejected attempt<br />
-Syslog<br />
-| where RunId_CF == "jp-46-20260730"<br />
-| where Computer == "ff-nacos-01" and SyslogMessage has "403"<br />
-| project TimeGenerated, SyslogMessage</th>
-</tr>
-</thead>
-<tbody>
-</tbody>
-</table>
-
-<table>
-<colgroup>
-<col style="width: 100%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th>// MySQL encryption and destruction<br />
-Syslog<br />
-| where RunId_CF == "jp-46-20260730"<br />
-| where Computer == "ff-db-01"<br />
-| where SyslogMessage has "AES_ENCRYPT" or SyslogMessage has "DROP TABLE"<br />
-| project TimeGenerated, SyslogMessage</th>
-</tr>
-</thead>
-<tbody>
-</tbody>
-</table>
-
-<table>
-<colgroup>
-<col style="width: 100%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th>// Ransom-note creation<br />
-Syslog<br />
-| where RunId_CF == "jp-46-20260730"<br />
-| where Computer == "ff-db-01"<br />
-| where SyslogMessage has "CREATE TABLE" or SyslogMessage has "README_RANSOM"<br />
-| project TimeGenerated, SyslogMessage</th>
-</tr>
-</thead>
-<tbody>
-</tbody>
-</table>
-
-<table>
-<colgroup>
-<col style="width: 100%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th>// Attacker process-lineage baseline<br />
-LinuxProcess_CL<br />
-| where DvcHostname =~ "ff-lf-01" and TargetProcessName =~ "python3.11"<br />
-| summarize count() by ActingProcessName</th>
-</tr>
-</thead>
-<tbody>
-</tbody>
-</table>
-
-<table>
-<colgroup>
-<col style="width: 100%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th>// Attack-session LLM activity<br />
-LLMAgentLogs_CL<br />
-| where RunId == "jp-46-20260730"<br />
-| where session_id == "jp-7f3c9a21"<br />
-| where TimeGenerated between (datetime(2026-07-30 19:21:00) .. datetime(2026-07-30 19:40:00))<br />
-| sort by TimeGenerated asc</th>
-</tr>
-</thead>
-<tbody>
-</tbody>
-</table>
 
 ## External References
 
 Langflow security advisory for CVE-2025-3248: [<u>GitHub Security Advisory - Langflow Unauth RCE</u>](https://github.com/langflow-ai/langflow/security/advisories/GHSA-rvqx-wpfh-mfx7)
 
-Public JadePuffer write-up used as a structural/reference comparison: [<u>Threat Hunt - JadePuffer</u>](https://github.com/ramin61092/ramin61092/blob/main/Threat%20Hunt-%20%22JadePuffer%22.md)
 
-Report structure reference: the analyst's prior CDSA security incident report (uploaded with this engagement).
 
 **End of Report**

@@ -13,6 +13,33 @@
 
 # Table of Contents
 
+# Table of Contents
+
+- [1 Statement of Confidentiality and Use](#1-statement-of-confidentiality-and-use)
+- [2 Engagement Information](#2-engagement-information)
+- [3 Investigation Objectives and Scope](#3-investigation-objectives-and-scope)
+- [4 Executive Summary](#4-executive-summary)
+- [5 Technical Analysis](#5-technical-analysis)
+  - [5.1 Affected Systems & Data](#51-affected-systems--data)
+  - [5.2 Initial Access and Exploitation](#52-initial-access-and-exploitation)
+  - [5.3 Execution, Command and Control, and Persistence](#53-execution-command-and-control-and-persistence)
+  - [5.4 Credential Access and Secret Harvesting](#54-credential-access-and-secret-harvesting)
+  - [5.5 Discovery and Internal Pivoting](#55-discovery-and-internal-pivoting)
+  - [5.6 Privilege Escalation and Account Persistence](#56-privilege-escalation-and-account-persistence)
+  - [5.7 Container-Escape Probe](#57-container-escape-probe)
+  - [5.8 Impact: Encryption, Destruction, and Ransom Note](#58-impact-encryption-destruction-and-ransom-note)
+  - [5.9 Autonomy Analysis](#59-autonomy-analysis)
+  - [5.10 Real or Noise: Baseline Separation](#510-real-or-noise-baseline-separation)
+- [6 Indicators of Compromise](#6-indicators-of-compromise)
+- [7 Root Cause Analysis](#7-root-cause-analysis)
+- [8 Containment and Recommendations](#8-containment-and-recommendations)
+- [9 MITRE ATT&CK Mapping](#9-mitre-attck-mapping)
+- [Appendix A - Technical Timeline](#appendix-a---technical-timeline)
+- [Appendix B - Case Evidence Matrix](#appendix-b---case-evidence-matrix)
+- [Appendix C - Representative KQL and References](#appendix-c---representative-kql-and-references)
+  - [Representative KQL](#representative-kql)
+  - [External References](#external-references)
+
 1\. Statement of Confidentiality and Use
 
 2\. Engagement Information
@@ -59,9 +86,9 @@ Appendix C. Representative KQL and References
 
 # 1 Statement of Confidentiality and Use
 
-This report documents a simulated threat-hunting and incident-response scenario in a training environment. The indicators, hostnames, credentials, addresses, and attack sequence are included for defensive analysis and portfolio documentation. They should not be interpreted as evidence of compromise against a real organization unless independently validated.
+This report documents a simulated threat-hunting and incident-response scenario in a training environment. The indicators, hostnames, credentials, addresses, and attack sequence are included for defensive analysis and portfolio documentation. 
 
-The report is intended to preserve the investigative reasoning, evidence sources, KQL pivots, and conclusions used to reconstruct the JadePuffer intrusion. Sensitive values should be reviewed before public publication.
+The report is intended to preserve the investigative reasoning, evidence sources, KQL pivots, and conclusions used to reconstruct the JadePuffer intrusion.
 
 # 2 Engagement Information
 
@@ -91,7 +118,7 @@ The investigation was structured to produce a reproducible incident narrative ra
 
 Primary telemetry sources used during the hunt included LinuxProcess_CL, LinuxNetwork_CL, LinuxSystem_CL, LLMAgentLogs_CL, Syslog, LinuxAudit_CL, LinuxContainer_CL, and LinuxFile_CL. The hunt window centered on 2026-07-30 approximately 19:20-19:37 UTC, with supporting baseline queries outside that window.
 
-# 4 Executive Summary
+## Executive Summary
 
 | **Incident Severity**        | Critical                                                      |
 |------------------------------|---------------------------------------------------------------|

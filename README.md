@@ -13,8 +13,6 @@
 
 # Table of Contents
 
-# Table of Contents
-
 - [1 Statement of Confidentiality and Use](#1-statement-of-confidentiality-and-use)
 - [2 Engagement Information](#2-engagement-information)
 - [3 Investigation Objectives and Scope](#3-investigation-objectives-and-scope)
@@ -40,49 +38,6 @@
   - [Representative KQL](#representative-kql)
   - [External References](#external-references)
 
-1\. Statement of Confidentiality and Use
-
-2\. Engagement Information
-
-3\. Investigation Objectives and Scope
-
-4\. Executive Summary
-
-5\. Technical Analysis
-
-5.1 Affected Systems & Data
-
-5.2 Initial Access and Exploitation
-
-5.3 Execution, Command and Control, and Persistence
-
-5.4 Credential Access and Secret Harvesting
-
-5.5 Discovery and Internal Pivoting
-
-5.6 Privilege Escalation and Account Persistence
-
-5.7 Container-Escape Probe
-
-5.8 Impact: Encryption, Destruction, and Ransom Note
-
-5.9 Autonomy Analysis
-
-5.10 Real or Noise: Baseline Separation
-
-6\. Indicators of Compromise
-
-7\. Root Cause Analysis
-
-8\. Containment and Recommendations
-
-9\. MITRE ATT&CK Mapping
-
-Appendix A. Technical Timeline
-
-Appendix B. Case Evidence Matrix
-
-Appendix C. Representative KQL and References
 
 # 1 Statement of Confidentiality and Use
 
@@ -118,7 +73,7 @@ The investigation was structured to produce a reproducible incident narrative ra
 
 Primary telemetry sources used during the hunt included LinuxProcess_CL, LinuxNetwork_CL, LinuxSystem_CL, LLMAgentLogs_CL, Syslog, LinuxAudit_CL, LinuxContainer_CL, and LinuxFile_CL. The hunt window centered on 2026-07-30 approximately 19:20-19:37 UTC, with supporting baseline queries outside that window.
 
-## Executive Summary
+# 4 Executive Summary
 
 | **Incident Severity**        | Critical                                                      |
 |------------------------------|---------------------------------------------------------------|
@@ -128,11 +83,32 @@ Primary telemetry sources used during the hunt included LinuxProcess_CL, LinuxNe
 | **Attack Window**            | ~17 minutes of tightly clustered attacker activity            |
 | **Autonomy Assessment**      | Human-tasked, followed by autonomous machine-paced execution  |
 
-On July 30, 2026, the Flowforge estate was compromised through Langflow's code-validation endpoint. The case evidence attributes initial access to CVE-2025-3248, a critical unauthenticated code-execution weakness in vulnerable Langflow versions. The exploit resulted in Python execution under the Langflow service context on ff-lf-01. From that foothold, the intrusion progressed through command-and-control, credential harvesting, internal discovery, abuse of default credentials, privilege escalation against Nacos, a container-runtime probe, and destructive encryption of the MySQL-backed configuration datastore.
+### Incident Overview
 
-The attack chain was unusually compressed. Attacker activity ran as a continuous burst of roughly seventeen minutes rather than as scattered interactive activity. The LLM-agent session and host telemetry together show a human-tasked pattern: one session supplied the mission, while subsequent tool use and corrective behavior proceeded without human-paced pauses. The agent adapted when MinIO returned XML rather than the expected JSON, recomputed a rejected password hash, retried the account-creation action, and then continued directly to impact operations.
+On July 30, 2026, a simulated AI workflow environment experienced an agent-driven ransomware intrusion beginning with exploitation of the Langflow `/api/v1/validate/code` endpoint associated with `CVE-2025-3248`. Successful remote code execution on `ff-lf-01` allowed the attacker to launch Python-based post-exploitation activity, establish command-and-control communications with `45.131.66.106:4444`, and create persistence through a cron job configured to execute every 30 minutes.
 
-The impact phase used the MySQL AES_ENCRYPT function against 1,342 records, followed by destruction of the original config_info and history tables. A new README_RANSOM table was created and populated with payment instructions. The same investigation also identified a persistent Nacos administrator account named svc_maint, outbound C2 to 45.131.66.106:4444, a Terraform-state credential file retrieved from MinIO, and the extraction of 214 stored secrets from the Langflow database.
+The compromise progressed from the Langflow host into credential harvesting and internal service discovery. The attacker accessed Langflow's PostgreSQL backend, collected API keys and cloud credentials, discovered MinIO, MySQL, and Nacos services, and authenticated to MinIO using the default `minioadmin:minioadmin` credentials. A `credentials.json` file was retrieved from the `terraform-state` bucket and used to facilitate additional lateral movement.
+
+The attacker subsequently abused Nacos authentication mechanisms to create the administrative account `svc_maint`. After obtaining access to the Nacos MySQL backend, the attacker encrypted 1,342 `config_info` records using the MySQL `AES_ENCRYPT()` function, dropped the original `config_info` and `history` tables, and created a `README_RANSOM` table containing payment instructions.
+
+### Immediate Actions Taken
+
+Analytical actions included correlating process, network, database, Linux, Syslog, and LLM-agent telemetry; identifying malicious infrastructure and credentials; distinguishing attacker activity from legitimate baseline activity; documenting indicators of compromise; and mapping observed behavior to the MITRE ATT&CK framework.
+
+The investigation also identified several defensive priorities, including patching vulnerable Langflow instances, removing default credentials, rotating exposed secrets, restricting access to internal management services, monitoring anomalous Python process relationships, and detecting unusual LLM-agent activity.
+
+### Stakeholder Impact
+
+Although the incident occurred in a simulated environment, the demonstrated attack chain represents significant potential business impact in a production deployment.
+
+**Security and Engineering Teams:**  
+The compromise demonstrated that credentials stored across interconnected AI, cloud, database, and infrastructure services can allow an attacker to move rapidly between systems. The autonomous nature of the attack further reduces the time defenders may have to identify and contain malicious activity.
+
+**Business Operations:**  
+Encryption of 1,342 database records and destruction of the original `config_info` and `history` tables demonstrates the potential for loss of availability, configuration data, and operational continuity.
+
+**Shareholders / Executives:**
+An incident of this scope could result in operational downtime, recovery costs, regulatory scrutiny, and reputational damage. The speed and autonomous nature of the attack also highlights the need for stronger segmentation, credential protection, and rapid detection capabilities to reduce the risk of similar incidents progressing before defenders can respond.
 
 # 5 Technical Analysis
 

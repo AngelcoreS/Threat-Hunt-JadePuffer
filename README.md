@@ -24,10 +24,9 @@
   - [5.4 Credential Access and Secret Harvesting](#54-credential-access-and-secret-harvesting)
   - [5.5 Discovery and Internal Pivoting](#55-discovery-and-internal-pivoting)
   - [5.6 Privilege Escalation and Account Persistence](#56-privilege-escalation-and-account-persistence)
-  - [5.7 Container-Escape Probe](#57-container-escape-probe)
-  - [5.8 Impact: Encryption, Destruction, and Ransom Note](#58-impact-encryption-destruction-and-ransom-note)
-  - [5.9 Autonomy Analysis](#59-autonomy-analysis)
-  - [5.10 Real or Noise: Baseline Separation](#510-real-or-noise-baseline-separation)
+  - [5.7 Impact: Encryption, Destruction, and Ransom Note](#58-impact-encryption-destruction-and-ransom-note)
+  - [5.8 Autonomy Analysis](#59-autonomy-analysis)
+  - [5.9 Real or Noise: Baseline Separation](#510-real-or-noise-baseline-separation)
 - [6 Indicators of Compromise](#6-indicators-of-compromise)
 - [7 Root Cause Analysis](#7-root-cause-analysis)
 - [8 Containment and Recommendations](#8-containment-and-recommendations)
@@ -189,22 +188,25 @@ POST /api/v1/validate/code
 
 The named vulnerability was `CVE-2025-3248`, an unauthenticated Langflow RCE affecting vulnerable versions of the code-validation endpoint. Syslog associated the request with external source `64.20.53.230`, which is treated in this report as a staging/initial-access indicator rather than the confirmed C2 destination.
 
-### Testing the Fileless Hypothesis
+**Assessment:** Initial access is supported by the exposed Langflow endpoint, `CVE-2025-3248`, Syslog request evidence, and the resulting Python child process under the Langflow service context.
 
-The suspicious process did not contain a SHA256 value, but broader process telemetry showed that SHA256 was absent from legitimate events as well. The lack of a hash was therefore a telemetry-coverage limitation, not proof of fileless execution.
+The investigation identified a successful request to the Langflow code-validation endpoint:
 
-A suitable validation query is:
+> **Finding:** At `19:20:00 UTC`, the Langflow service received a `POST` request to `/api/v1/validate/code`. The request returned HTTP `200`, originated from `64.20.53.230`, and used the Python `requests` library (`python-requests/2.32.3`).
+
+The following Syslog query was used to identify the request:
 
 ```kql
-LinuxProcess_CL
-| where TimeGenerated between (datetime(2026-07-30 00:00:00) .. datetime(2026-07-31 00:00:00))
-| summarize
-    TotalEvents = count(),
-    WithSHA256 = countif(isnotempty(TargetProcessSHA256)),
-    WithoutSHA256 = countif(isempty(TargetProcessSHA256))
-```
+Syslog
+| where RunId_CF == "jp-46-20260730"
+| where ProcessName == "langflow" and SyslogMessage has "validate/code"
+| where TimeGenerated between (
+    datetime(2026-07-30 19:15:00) ..
+    datetime(2026-07-30 19:30:00)
+)
+| project TimeGenerated, SyslogMessage
 
-**Assessment:** Initial access is supported by the exposed Langflow endpoint, `CVE-2025-3248`, Syslog request evidence, and the resulting Python child process under the Langflow service context.
+<img src="media/imagee1.png" width="900" alt="Initial attacker Python execution on ff-lf-01">
 
 ## 5.3 Execution, Command and Control, and Persistence
 
@@ -391,33 +393,8 @@ LinuxAudit_CL
 
 **Assessment:** The initial Nacos privileged-account attempt failed, the agent corrected the error, and `svc_maint` was created successfully 31 seconds later.
 
-## 5.7 Container-Escape Probe
 
-The attacker queried the Docker socket using:
-
-```text
-GET /containers/json via /var/run/docker.sock
-```
-
-<img src="media/image8.png" width="900" alt="Docker socket query">
-
-**Figure 8 — `LinuxContainer_CL` records the Docker API request.**
-
-The request proves that the runtime interface was reachable. However, the telemetry did not contain the Docker response body, and the relevant container identity fields were empty:
-
-- `ContainerId`
-- `ImageName`
-- `ImageRef`
-
-<img src="media/image9.png" width="900" alt="Container identity fields empty">
-
-**Figure 9 — The data source does not establish which containers were returned.**
-
-The correct conclusion is therefore limited to **Docker socket queried / reachable**. Naming specific returned containers would exceed what the telemetry supports.
-
-**Assessment:** A container-escape reconnaissance probe occurred, but a successful escape or the returned container list cannot be established from the available evidence.
-
-## 5.8 Impact: Encryption, Destruction, and Ransom Note
+## 5.7 Impact: Encryption, Destruction, and Ransom Note
 
 Database Syslog showed the destructive phase beginning with:
 
@@ -458,7 +435,7 @@ Because both `CREATE TABLE` and `INSERT` activity were present in the database l
 
 **Assessment:** The intrusion achieved ransomware impact through database encryption, destruction of the original tables, and creation of a ransom-note table.
 
-## 5.9 Autonomy Analysis
+## 5.8 Autonomy Analysis
 
 The `LLMAgentLogs_CL` dataset contained more than one conversation. The malicious activity was isolated to session:
 
@@ -493,7 +470,7 @@ The strongest fields for demonstrating the autonomy pattern are:
 
 **Assessment:** The operation was **human-tasked but autonomous in execution**. A person established the objective, while the LLM agent independently selected and adapted the technical steps used to pursue it.
 
-## 5.10 Real or Noise: Baseline Separation
+## 5.9 Real or Noise: Baseline Separation
 
 A major part of the hunt was distinguishing attacker activity from legitimate background behavior.
 

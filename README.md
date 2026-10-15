@@ -224,8 +224,6 @@ The connection was significant not merely because port `4444` is non-standard, b
 
 The investigation then pivoted to persistence. Linux audit telemetry showed a `cron-change` event under the `langflow` account, and Linux system telemetry showed a scheduled command retrieving content from `45.131.66.106:4444` and piping it to `python3`.
 
-Shell-history evidence established the cadence as every 30 minutes.
-
 Representative queries:
 
 ```kql
@@ -243,13 +241,6 @@ LinuxSystem_CL
 | order by TimeGenerated asc
 ```
 
-```kql
-LinuxShellHistory_CL
-| where TimeGenerated between (datetime(2026-07-30 19:20:00) .. datetime(2026-07-30 19:40:00))
-| where Command has_any ("crontab", "/etc/cron", "cron.d", "45.131.66.106")
-| project TimeGenerated, ShellUser, Command, Pwd, ReturnCode
-| order by TimeGenerated asc
-```
 
 **Assessment:** The attacker established a recurring C2 mechanism under the `langflow` account using cron to re-establish communications with `45.131.66.106:4444` every 30 minutes.
 

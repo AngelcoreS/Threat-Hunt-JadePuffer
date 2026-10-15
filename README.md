@@ -427,7 +427,6 @@ and inserted payment instructions containing the Bitcoin address:
 3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy
 ```
 
-<img src="media/image11.png" width="900" alt="Ransom note table creation">
 
 **Figure 11 — Creation and population of `README_RANSOM`.**
 
@@ -480,13 +479,6 @@ Several `python3.11` processes existed on `ff-lf-01`. The process name itself wa
 
 <img src="media/image13.png" width="900" alt="Python process lineage grouped by parent">
 
-**Figure 13 — Grouping `python3.11` spawns by parent isolates the attacker interpreters.**
-
-The normal Langflow process was started by `systemd`, while the attacker chain showed `python3.11` spawning additional `python3.11` interpreters.
-
-<img src="media/image14.png" width="900" alt="Attacker Python process chain">
-
-**Figure 14 — Attacker Python lineage associated with credential access, discovery, MinIO activity, and the Docker probe.**
 
 ### External Network Activity
 
@@ -530,7 +522,6 @@ Benign Python spawns were scattered throughout the working day. The attacker act
 | Ransom table | `README_RANSOM` | Extortion artifact |
 | Payment address | `3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy` | Ransom payment destination |
 
-> `RunId: jp-46-20260730` is intentionally excluded from the IOC table because it is simulation correlation metadata, not an attacker indicator.
 
 ---
 
